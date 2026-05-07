@@ -226,7 +226,7 @@ app.get('/login', (req,res) => {
     var html = `
     log in
     <form action='/loggingin' method='post'>
-    <input name='username' type='text' placeholder='username'>
+    <input name='email' type='text' placeholder='email'>
     <input name='password' type='password' placeholder='password'>
     <button>Submit</button>
     </form>
@@ -235,30 +235,30 @@ app.get('/login', (req,res) => {
 });
 
 app.post('/loggingin', async (req,res) => {
-    var username = req.body.username;
+    var em = req.body.email;
     var password = req.body.password;
 
 	const schema = Joi.string().max(20).required();
-    const validationResult = schema.validate(username);
+    const validationResult = schema.validate(em);
 	if (validationResult.error != null) {
 	   console.log(validationResult.error);
 	   res.redirect("/login");
 	   return;
 	}
 
-	const result = await userCollection.find({username: username}).project({username: 1, pass: 1, _id: 1}).toArray();
+	const result = await userCollection.find({email: em}).project({username: 1, email: 1, pass: 1, _id: 1}).toArray();
 
 	console.log(result);
 	if (result.length != 1) {
         res.send(`
-        <p>Name is wrong!<p>   
+        <p>Email is wrong!<p>   
         <a href="/login">Go back</a>    
         `)
 		return;
 	}
 	if (await bcrypt.compare(password, result[0].pass)) {
 		req.session.authenticated = true;
-		req.session.username = username;
+		req.session.username = result[0].username;
 		req.session.cookie.maxAge = expireTime;
         console.log("correct password");
 
@@ -284,7 +284,7 @@ app.get('/members', (req,res) => {
             <p>Hello, ${req.session.username}</p><br>
             ${fruit}<br>
             <form method="post" action="/logout">
-                <input type="submit" value="Log out">
+                <input type="submit" value="Sign out">
             </form>
             `)
     } else {
