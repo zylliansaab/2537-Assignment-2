@@ -1,0 +1,16 @@
+<%- include("templates/header") %>  
+
+  <%const randomNumber = Math.floor(Math.random() * 3) + 1;
+    const fruit = getImage(randomNumber);%>
+
+    <%if (req.session.authenticated) {%>
+            <p>Hello, ${req.session.username}</p><br>
+            ${fruit}<br>
+            <form method="post" action="/logout">
+                <input type="submit" value="Sign out">
+            </form>
+    <%} else {
+        res.redirect('/');
+    }%>
+    
+<%- include("templates/footer") %>

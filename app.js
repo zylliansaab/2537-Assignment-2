@@ -4,6 +4,7 @@ const express = require('express');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
 const bcrypt = require('bcrypt');
+const dns = require('node:dns');
 const saltRounds = 12;
 
 const app = express();
@@ -16,6 +17,7 @@ const mongoSanitize = require('express-mongo-sanitize');
 
 const PORT = process.env.PORT || 3000;
 const expireTime = 1 * 60 * 60 * 1000; //expires after 1 hour  (hours * minutes * seconds * millis)
+dns.setServers(['8.8.8.8', '8.8.4.4']);
 
 /* secret information section */
 const mongodb_host = process.env.MONGODB_HOST;
@@ -143,41 +145,11 @@ function getImage(id) {
 
 // Routes
 app.get('/', (req, res) => {
-
-    if (req.session.authenticated == true) {
-        res.send(`
-            <p>Hello! ${req.session.username}</p>
-            <form action="/members" method="get">
-                <input type="submit" value="Go to Members Area">
-            </form>
-            <form action="/logout" method="post">
-                <input type="submit" value="Logout">
-            </form>    
-    `);
-    } else {
-        req.session.authenticated = false;
-        res.send(`
-            <form action="/signup" method="get">
-                <input type="submit" value="Sign up">
-            </form>
-            <form action="/login" method="get">
-                <input type="submit" value="Log in">
-            </form>    
-    `);
-    }
-    console.log(req.session.authenticated);
+    res.render("home.ejs", {req: req});
 });
 
 app.get('/signup', (req, res) => {
-    res.send(`
-        <p>Please create your user.<p>       
-        <form action="/signupSubmit" method="post">
-            <input name='name' type='text' placeholder='Name'><br>
-            <input name='email' type='email' placeholder='Email'><br>
-            <input name='password' type='password' placeholder='Password'><br>
-            <button>Submit</button>
-        </form>
-        `)
+    res.render("signup.ejs")
 });
 
 app.post('/signupSubmit', async (req, res) => {
@@ -223,15 +195,7 @@ app.post('/signupSubmit', async (req, res) => {
 
 
 app.get('/login', (req,res) => {
-    var html = `
-    log in
-    <form action='/loggingin' method='post'>
-    <input name='email' type='text' placeholder='email'>
-    <input name='password' type='password' placeholder='password'>
-    <button>Submit</button>
-    </form>
-    `;
-    res.send(html);
+    res.render(login.ejs);
 });
 
 app.post('/loggingin', async (req,res) => {
@@ -275,22 +239,10 @@ app.post('/loggingin', async (req,res) => {
 });
 
 app.get('/members', (req,res) => {
-
-    const randomNumber = Math.floor(Math.random() * 3) + 1;
-    const fruit = getImage(randomNumber);
-
-    if (req.session.authenticated) {
-        res.send(`
-            <p>Hello, ${req.session.username}</p><br>
-            ${fruit}<br>
-            <form method="post" action="/logout">
-                <input type="submit" value="Sign out">
-            </form>
-            `)
-    } else {
-        res.redirect('/');
-    }
-
+    res.render('members.ejs', {req: req,
+        res: res,
+        getImage: getImage
+    });
 });
 
 app.post('/logout', (req,res) => {

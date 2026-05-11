@@ -1,0 +1,17 @@
+<% if (req.session.authenticated == true) { %>
+            <p>Hello! <%=req.session.username%></p>
+            <form action="/members" method="get">
+                <input type="submit" value="Go to Members Area">
+            </form>
+            <form action="/logout" method="post">
+                <input type="submit" value="Logout">
+            </form>    
+<%    } else { %>
+       <% req.session.authenticated = false; %>
+            <form action="/signup" method="get">
+                <input type="submit" value="Sign up">
+            </form>
+            <form action="/login" method="get">
+                <input type="submit" value="Log in">
+            </form>    
+<%    } %>
