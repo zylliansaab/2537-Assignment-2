@@ -1,7 +1,25 @@
-        <p>Please create your user.<p>       
+<%- include("templates/header") %>
+
+<div class="d-flex flex-column text-center vh-100">
+    <div class="p-2">
+        <h2>Please create your user.</h2> 
+    </div> 
+        <div class="p-2">     
         <form action="/signupSubmit" method="post">
+            <div class="p-2"> 
             <input name='name' type='text' placeholder='Name'><br>
+            </div>
+            <div class="p-2"> 
             <input name='email' type='email' placeholder='Email'><br>
+            </div>
+            <div class="p-2"> 
             <input name='password' type='password' placeholder='Password'><br>
-            <button>Submit</button>
+            </div>
+            <div class="p-2"> 
+            <button class="btn btn-success w-10 mb-2 text-white btn-outline-success">Submit</button>
+            </div>
         </form>
+        </div>
+</div>
+
+<%- include("templates/footer") %>

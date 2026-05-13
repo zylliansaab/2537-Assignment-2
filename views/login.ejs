@@ -1,5 +1,18 @@
-    <form action='/loggingin' method='post'>
-    <input name='email' type='text' placeholder='email'>
-    <input name='password' type='password' placeholder='password'>
-    <button>Submit</button>
-    </form>
+    <%- include("templates/header") %>
+    
+    <div class="d-flex flex-column text-center vh-100">
+        <h2>Logging In</h2>
+        <form action='/loggingin' method='post'>
+        <div class="p-2">
+        <input name='email' type='text' placeholder='email'>
+        </div>
+        <div class="p-2">
+        <input name='password' type='password' placeholder='password'>
+        </div>
+        <div class="p-2">
+        <button class="btn btn-success w-10 mb-2 text-white btn-outline-success">Submit</button>
+        </div>
+        </form>
+    </div>
+
+    <%- include("templates/footer") %>

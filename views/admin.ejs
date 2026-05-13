@@ -1,0 +1,30 @@
+<%- include("templates/header") %>
+
+    <div class="d-flex flex-column text-center vh-100">
+        <div class="p-2">
+            <h3>Users</h3>
+        </div>
+        <div class="p-2">
+            <ul class="list-unstyled">
+                <% users.forEach(function(users) { %>
+                    <li>
+                        <%=users.username%> (<%=users.user_type%>)
+                                <form action="/promote" method="post">
+                                    <input type="hidden" name="username" value="<%=users.username%>">
+                                    <button type="submit"
+                                        class="btn btn-success w-10 mb-2 text-white btn-outline-success">Promote to
+                                        Admin</button>
+                                </form>
+                                <form action="/demote" method="post">
+                                    <input type="hidden" name="username" value="<%=users.username%>">
+                                    <button type="submit"
+                                        class="btn btn-danger w-10 text-white btn-outline-danger">Demote to
+                                        User</button>
+                                </form>
+                    </li>
+                    <% }); %>
+            </ul>
+        </div>
+    </div>
+
+    <%- include("templates/footer") %>

@@ -128,18 +128,54 @@ app.post('/nosql-injection', async (req,res) => {
 
 // Functions
 
-function getImage(id) {
-    if (id == 1) {
-        return "<img src='/apple.jpg' style='width:250px;'>";
+// NO LONGER IN USE
+// function getImage(id) {
+//     if (id == 1) {
+//         return "/apple.jpg";
+//     }
+//     else if (id == 2) {
+//         return "/pineapple.jpg";
+//     } 
+//     else if (id == 3) {
+//         return "/orange.jpg";
+//     }
+//     else {
+//         return "Invalid id " + id;
+//     }
+// }
+
+function isValidSession(req) {
+    if (req.session.authenticated) {
+        return true;
+    } else {
+    return false;
     }
-    else if (id == 2) {
-        return "<img src='/pineapple.jpg' style='width:250px;'>";
-    } 
-    else if (id == 3) {
-        return "<img src='/orange.jpg' style='width:250px;'>";
+}
+
+function sessionValidation(req,res,next) {
+    if (isValidSession(req)) {
+        next();
+    } else {
+        res.redirect('/login');
+    }
+}
+
+function isAdmin(req) {
+    if (req.session.user_type == 'admin') {
+        return true;
+    } else {
+    return false;
+    }
+}
+
+function adminAuthorization(req, res, next) {
+    if (!isAdmin(req)) {
+        res.status(403);
+        res.render("errorMessage.ejs", {error: "403 Not Authorized"} );
+        return;
     }
     else {
-        return "Invalid id " + id;
+        next();
     }
 }
 
@@ -154,48 +190,39 @@ app.get('/signup', (req, res) => {
 
 app.post('/signupSubmit', async (req, res) => {
 
-    var name = req.body.name;
-    var emailAdd = req.body.email;
-    var password = req.body.password;
+    var { name, email, password } = req.body;
 
     const schema = Joi.object(
 		{
-			username: Joi.string().alphanum().max(20).required(),
-            email: Joi.string().alphanum().max(20).required(),
-			pass: Joi.string().max(20).required()
+			name: Joi.string().alphanum().max(20).required(),
+            email: Joi.string().max(20).required(),
+			password: Joi.string().max(20).required()
 		});
 
-    if (name == "") {
-        res.send(`
-        <p>Name is required!<p>   
-        <a href="/signup">Go back</a>    
-        `)
-    } else if (emailAdd == "") {
-        res.send(`
-        <p>Please provide an email address!<p>
-        <a href="/signup">Go back</a>    
-        `)
-    } else if (password == "") {
-        res.send(`
-        <p>Password is required!<p>
-        <a href="/signup">Go back</a>    
-        `)
-    } else {
+    const validate = schema.validate({ name, email, password })
+    
+    if (validate.error  != null) {
+        const message = validate.error.details[0].message;
+        res.send(`<h1>Error</h1><p>${message}</p><a href="/signup">Try again</a>`);
+        return;
+    }   else {
         var hashedPassword = await bcrypt.hash(password, saltRounds);
 	
-        await userCollection.insertOne({username: name, email: emailAdd, pass: hashedPassword});
+        await userCollection.insertOne({username: name, email: email, pass: hashedPassword, user_type: 'user'});
         req.session.authenticated = true;
 		req.session.username = name;
+        req.session.user_type = userCollection.user_type;
 		req.session.cookie.maxAge = expireTime;
 
         console.log("User created!")
         res.redirect('/members');
+        return;
     }  
 });
 
 
 app.get('/login', (req,res) => {
-    res.render(login.ejs);
+    res.render("login.ejs");
 });
 
 app.post('/loggingin', async (req,res) => {
@@ -210,7 +237,7 @@ app.post('/loggingin', async (req,res) => {
 	   return;
 	}
 
-	const result = await userCollection.find({email: em}).project({username: 1, email: 1, pass: 1, _id: 1}).toArray();
+	const result = await userCollection.find({email: em}).project({username: 1, email: 1, pass: 1, user_type: 1, _id: 1}).toArray();
 
 	console.log(result);
 	if (result.length != 1) {
@@ -223,13 +250,13 @@ app.post('/loggingin', async (req,res) => {
 	if (await bcrypt.compare(password, result[0].pass)) {
 		req.session.authenticated = true;
 		req.session.username = result[0].username;
+        req.session.user_type = result[0].user_type;
 		req.session.cookie.maxAge = expireTime;
         console.log("correct password");
 
 		res.redirect('/members');
 		return;
-	}
-	else {
+	} else {
         res.send(`
         <p>Password is wrong!<p>   
         <a href="/login">Go back</a>    
@@ -239,10 +266,14 @@ app.post('/loggingin', async (req,res) => {
 });
 
 app.get('/members', (req,res) => {
-    res.render('members.ejs', {req: req,
+    if (req.session.authenticated) {
+            res.render('members.ejs', {
+        req: req,
         res: res,
-        getImage: getImage
-    });
+        });
+    } else {
+        res.redirect('/');
+    }
 });
 
 app.post('/logout', (req,res) => {
@@ -250,6 +281,34 @@ app.post('/logout', (req,res) => {
 	req.session.destroy();
     res.redirect('/');
 });
+
+
+app.get('/admin', sessionValidation, adminAuthorization, async (req,res) => {
+    const result = await userCollection.find().project({username: 1, _id: 1, user_type: 1}).toArray();
+
+    res.render("admin.ejs", {
+        users: result});
+});
+
+app.post('/promote', async (req,res) => {
+    const user = req.body.username;
+    userCollection.updateOne({username: user}, {$set: {user_type: 'admin'}});
+    
+    if (user === req.session.username) {
+        req.session.user_type = 'admin';
+    }
+    res.redirect('/admin');
+})
+
+app.post('/demote', async (req,res) => {
+    const user = req.body.username;
+    userCollection.updateOne({username: user}, {$set: {user_type: 'user'}});
+
+    if (user === req.session.username) {
+        req.session.user_type = 'user';
+    }
+    res.redirect('/admin');
+})
 
 app.use(express.static(__dirname + "/public"));
 

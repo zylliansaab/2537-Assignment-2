@@ -1,17 +1,38 @@
+<%- include("templates/header") %>
+
 <% if (req.session.authenticated == true) { %>
-            <p>Hello! <%=req.session.username%></p>
-            <form action="/members" method="get">
-                <input type="submit" value="Go to Members Area">
-            </form>
-            <form action="/logout" method="post">
-                <input type="submit" value="Logout">
-            </form>    
+        <div class="d-flex flex-column text-center vh-100">
+            <div class="p-2">
+                <h2 text-center>Hello! <%=req.session.username%></h2>
+            </div>
+            <div class="p-2">
+                <form action="/members" method="get">
+                    <input type="submit" value="Go to Members Area" class="btn btn-info w-25 text-white btn-outline-primary">
+                </form>
+            </div>
+            <div class="p-2">
+                <form action="/logout" method="post">
+                    <input type="submit" value="Logout" class="btn btn-info w-25 text-white btn-outline-primary">
+                </form> 
+            </div>
+        </div>   
 <%    } else { %>
        <% req.session.authenticated = false; %>
-            <form action="/signup" method="get">
-                <input type="submit" value="Sign up">
-            </form>
-            <form action="/login" method="get">
-                <input type="submit" value="Log in">
-            </form>    
+       <div class="d-flex flex-column text-center vh-100">
+            <div class="p-2">
+            <h1 text-center>Welcome to Assignment 2!</h1>
+            </div>
+            <div class="p-2">
+                <form action="/signup" method="get">
+                    <input type="submit" value="Sign up" class="btn btn-info w-25 text-white btn-outline-primary">
+                </form>
+            </div>
+            <div class="p-2">
+                <form action="/login" method="get">
+                    <input type="submit" value="Log in" class="btn btn-info w-25 text-white btn-outline-primary">
+                </form>
+            </div>  
+        </div>  
 <%    } %>
+
+<%- include("templates/footer") %>
