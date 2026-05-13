@@ -313,8 +313,8 @@ app.post('/demote', async (req,res) => {
 app.use(express.static(__dirname + "/public"));
 
 app.use((req,res) => {
-	res.status(404);
-	res.send("Page not found - 404");
+        res.status(404);
+        res.render("errorMessage.ejs", {error: "404 Not Found"} );
 });
 
 // Start server
